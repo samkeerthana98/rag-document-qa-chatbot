@@ -18,9 +18,9 @@ EC2 Instance (t3.large or t3.xlarge)
     └── ChromaDB (data persisted on host via volume)
 ```
 
-The container talks to Ollama via `http://localhost:11434` because both run
-on the same host. There is no Docker Compose or inter-container networking
-needed.
+The container talks to Ollama via `http://host.docker.internal:11434`. Ollama
+runs directly on the EC2 host; the container reaches it using the
+`host.docker.internal` hostname, which `--add-host` maps to the host gateway IP.
 
 ---
 
@@ -239,7 +239,7 @@ docker run -d \
   -p 5000:5000 \
   -e SECRET_KEY="<paste-your-secret-key-here>" \
   -e FLASK_DEBUG=false \
-  -e OLLAMA_BASE_URL=http://localhost:11434 \
+  -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
   -e CHROMA_DB_PATH=/app/chroma_db \
   -e UPLOAD_FOLDER=/app/uploads \
   -v ~/rag-data/uploads:/app/uploads \
@@ -258,7 +258,7 @@ Flag explanations:
 | `-p 5000:5000` | Expose port 5000 to the host |
 | `-e SECRET_KEY=...` | Flask session signing key (required in production) |
 | `-e FLASK_DEBUG=false` | Disable debug mode |
-| `-e OLLAMA_BASE_URL=http://localhost:11434` | Point the app at the host Ollama process |
+| `-e OLLAMA_BASE_URL=http://host.docker.internal:11434` | Point the app at the host Ollama process (`host.docker.internal` resolves to the host via `--add-host`) |
 | `-v ~/rag-data/uploads:/app/uploads` | Persist uploaded PDFs on the host |
 | `-v ~/rag-data/chroma_db:/app/chroma_db` | Persist ChromaDB vector data on the host |
 | `-v hf-cache:/app/.cache/huggingface` | Cache the HuggingFace embedding model between runs |
@@ -267,10 +267,11 @@ Flag explanations:
 > **Why `--add-host`?**  
 > On Linux, `host.docker.internal` is not resolved automatically (it is only
 > available on Docker Desktop). `--add-host=host.docker.internal:host-gateway`
-> adds the entry to `/etc/hosts` inside the container so
-> `OLLAMA_BASE_URL=http://localhost:11434` correctly resolves to the EC2 host.
-> Alternatively you can set `OLLAMA_BASE_URL=http://172.17.0.1:11434` (the
-> default Docker bridge gateway IP), but `--add-host` is more portable.
+> adds the entry to `/etc/hosts` inside the container, so
+> `OLLAMA_BASE_URL=http://host.docker.internal:11434` correctly resolves to
+> the EC2 host. Alternatively you can set
+> `OLLAMA_BASE_URL=http://172.17.0.1:11434` (the default Docker bridge gateway
+> IP), but `--add-host` is more portable.
 
 ---
 
@@ -334,7 +335,7 @@ All configuration is passed at container startup via `-e` flags or an
 |---|---|---|
 | `SECRET_KEY` | Long random hex string | Flask session signing key |
 | `FLASK_DEBUG` | `false` | Disable debug mode in production |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama runs on the same host |
+| `OLLAMA_BASE_URL` | `http://host.docker.internal:11434` | Reach host Ollama via `--add-host` |
 | `OLLAMA_MODEL` | `llama3.2` | Model name (must be pulled) |
 | `CHROMA_DB_PATH` | `/app/chroma_db` | Absolute path inside the container |
 | `UPLOAD_FOLDER` | `/app/uploads` | Absolute path inside the container |

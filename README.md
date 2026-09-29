@@ -7,7 +7,7 @@ Upload a PDF, ask questions about it, and get answers grounded in the document
 content — powered by a local LLM (Ollama + llama3.2) and local embeddings
 (HuggingFace sentence-transformers).
 
-![CI](https://github.com/your-username/rag-document-qa-chatbot/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/samkeerthana98/rag-document-qa-chatbot/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -53,8 +53,8 @@ content — powered by a local LLM (Ollama + llama3.2) and local embeddings
 
 The Flask app and Ollama are kept **separate**: Ollama runs on the host (or EC2
 instance directly), and the Flask container connects to it via
-`OLLAMA_BASE_URL`. This keeps the Docker image small and the LLM independently
-upgradeable.
+`OLLAMA_BASE_URL`. This keeps the Ollama model outside the application image,
+so the LLM can be upgraded independently without rebuilding or redeploying the app.
 
 ---
 
@@ -128,7 +128,7 @@ rag-document-qa-chatbot/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/rag-document-qa-chatbot.git
+git clone https://github.com/samkeerthana98/rag-document-qa-chatbot.git
 cd rag-document-qa-chatbot
 
 # 2. Create and activate a virtual environment
@@ -152,7 +152,7 @@ cp .env.example .env        # macOS / Linux
 
 ## Ollama Setup
 
-Ollama runs the LLM locally — no API key, no internet connection needed after setup.
+Ollama runs the LLM locally — no API key required. After Ollama and the required model are downloaded, runtime inference runs entirely on your machine with no internet connection needed.
 
 ```bash
 # 1. Install Ollama from https://ollama.com
@@ -302,7 +302,7 @@ docker run -p 5000:5000 \
 # Run (Linux host — use --add-host instead of host.docker.internal)
 docker run -p 5000:5000 \
   -e SECRET_KEY=your-secret-key \
-  -e OLLAMA_BASE_URL=http://localhost:11434 \
+  -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
   -v $(pwd)/uploads:/app/uploads \
   -v $(pwd)/chroma_db:/app/chroma_db \
   -v hf-cache:/app/.cache/huggingface \
