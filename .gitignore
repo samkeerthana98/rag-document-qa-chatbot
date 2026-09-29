@@ -1,0 +1,63 @@
+# .gitignore — Files and directories that must NOT be committed to source control.
+
+# ── Secrets and local configuration ───────────────────────────────────────────
+.env
+
+# ── Python runtime ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── pip / build artifacts ─────────────────────────────────────────────────────
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.whl
+
+# ── pytest ────────────────────────────────────────────────────────────────────
+.pytest_cache/
+.cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── HuggingFace model cache ───────────────────────────────────────────────────
+# The embedding model is downloaded automatically on first run.
+# Do not commit the downloaded model weights.
+.cache/
+models/
+
+# ── ChromaDB persistence ───────────────────────────────────────────────────────
+# The vector database is built at runtime from uploaded documents.
+# Committing it would be large, stale, and pointless.
+chroma_db/
+
+# ── Uploaded files ─────────────────────────────────────────────────────────────
+# User-uploaded PDFs should not be committed.
+uploads/
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Jupyter notebooks (if used for exploration) ───────────────────────────────
+.ipynb_checkpoints/

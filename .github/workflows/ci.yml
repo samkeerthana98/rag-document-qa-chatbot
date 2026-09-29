@@ -1,0 +1,109 @@
+# .github/workflows/ci.yml — Continuous Integration for RAG Document Q&A Chatbot
+#
+# Runs on every push and pull request to main/master.
+#
+# Jobs:
+#   test  — Install dependencies, run the full pytest suite (329 tests).
+#   docker — Build the Docker image to catch Dockerfile regressions.
+#
+# Design decisions:
+#   - Python 3.11 matches the Dockerfile base image (python:3.11-slim).
+#   - pip cache keyed on requirements.txt hash so torch/sentence-transformers
+#     (~1.5 GB) are only re-downloaded when dependencies change.
+#   - Ollama is NOT installed or started. All LLM calls in tests are mocked.
+#   - No AWS credentials. No deployment step.
+#   - Docker build uses --no-start: we only verify the image builds, not that
+#     the container boots (that requires Ollama on the host).
+#   - Secrets are never echoed or stored.
+
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+# Cancel any in-progress run for the same branch/PR when a new commit is pushed.
+# Prevents queuing up redundant runs while you iterate quickly.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Job 1: Run tests ────────────────────────────────────────────────────────
+  test:
+    name: Test (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Cache the pip download cache directory.
+      # Key includes a hash of requirements.txt so the cache is invalidated
+      # automatically when any dependency version changes.
+      # torch + sentence-transformers are ~1.5 GB — without caching, every
+      # run would spend 5–10 minutes just downloading them.
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-py3.11-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-py3.11-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Run the full test suite.
+      # -v  — verbose output so individual test names are visible in the log.
+      # --tb=short — concise tracebacks; full detail is rarely needed in CI.
+      # All Ollama LLM calls are mocked in tests — no Ollama service required.
+      - name: Run pytest
+        run: pytest -v --tb=short
+        env:
+          # Ensure debug mode is off and paths are consistent during tests.
+          FLASK_DEBUG: "false"
+          # Point HuggingFace cache at the runner's home so it benefits from
+          # the pip cache warming done above.
+          HF_HOME: ~/.cache/huggingface
+
+  # ── Job 2: Docker build validation ─────────────────────────────────────────
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    # Run independently of the test job so a test failure doesn't block the
+    # Docker build check, and both results are visible in the PR at once.
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Set up Docker Buildx for better caching and build performance.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build the image.
+      # --cache-from / --cache-to: use GitHub Actions cache to store Docker
+      # layer cache between runs. The heavy layers (apt packages, pip install)
+      # are reused as long as the relevant Dockerfile lines haven't changed.
+      # load: false — we only verify the build succeeds; we don't need the
+      # image in the local daemon since we're not running it.
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: false
+          tags: rag-chatbot:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

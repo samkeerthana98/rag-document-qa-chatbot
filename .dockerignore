@@ -1,0 +1,53 @@
+# .dockerignore — Files excluded from the Docker build context.
+#
+# Excluding these keeps the Docker image small and prevents secrets from
+# accidentally being baked into the image layer.
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+.env
+
+# ── Version control ───────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Python runtime cache ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Test artifacts ────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# ── Data directories ─────────────────────────────────────────────────────────
+# These are created at runtime; no need to copy into the image.
+uploads/
+chroma_db/
+
+# ── HuggingFace model cache ───────────────────────────────────────────────────
+# The model is downloaded on first container run and cached in a Docker volume.
+.cache/
+models/
+
+# ── Documentation ─────────────────────────────────────────────────────────────
+README.md
+docs/
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/

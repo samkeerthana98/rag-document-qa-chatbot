@@ -1,0 +1,45 @@
+# requirements.txt — Python dependencies for RAG Document Q&A Chatbot
+#
+# All versions are pinned (==) so the project is fully reproducible.
+# Verified compatible with Python 3.11+ using pip dry-run (no conflicts).
+#
+# Install:
+#   pip install -r requirements.txt
+#
+# Note: torch and sentence-transformers are large (~1.5 GB total).
+# The first install will take several minutes depending on your connection.
+# Subsequent runs use the local pip cache.
+
+# ── Web framework ──────────────────────────────────────────────────────────────
+flask==3.1.3
+werkzeug==3.1.9          # Flask dependency; provides secure_filename and more
+python-dotenv==1.2.3     # Loads .env file into os.environ at startup
+gunicorn==23.0.0         # Production WSGI server (used in Docker; see Dockerfile)
+
+# ── PDF processing ─────────────────────────────────────────────────────────────
+pypdf==6.19.0            # Pure-Python PDF reader; no system dependencies needed
+
+# ── LangChain core and integrations ───────────────────────────────────────────
+# LangChain connects the RAG pipeline components (loader → splitter → retriever
+# → LLM) with a common interface.
+langchain==1.4.2
+langchain-community==0.4.2        # Community integrations (ChromaDB loader, etc.)
+langchain-ollama==1.1.0           # Official Ollama ↔ LangChain integration
+langchain-huggingface==1.2.2      # Official HuggingFace ↔ LangChain integration
+langchain-text-splitters==1.1.2   # RecursiveCharacterTextSplitter
+
+# ── Local embeddings ───────────────────────────────────────────────────────────
+# sentence-transformers runs the embedding model locally.
+# No API key, no external service, no cost per embedding.
+sentence-transformers==6.1.0
+# torch is the deep-learning backend required by sentence-transformers.
+# CPU-only version is sufficient for embeddings; GPU will be used automatically
+# if available (speeds up embedding generation significantly).
+torch==2.14.0
+
+# ── Vector database ────────────────────────────────────────────────────────────
+chromadb==1.5.9          # Embedded vector DB with local persistence
+
+# ── Testing ────────────────────────────────────────────────────────────────────
+pytest==9.1.1
+pytest-flask==1.3.0      # Provides Flask test client fixture for pytest
