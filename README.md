@@ -110,6 +110,7 @@ rag-document-qa-chatbot/
 ├── Dockerfile
 ├── DEPLOYMENT.md                   # AWS EC2 step-by-step guide
 ├── requirements.txt                # Pinned dependencies
+├── prompts.md                          # Kiro development prompts and workflow
 └── run.py                          # Development entry point
 ```
 
@@ -330,7 +331,7 @@ Summary:
 - Single EC2 instance (`t3.large` minimum, `t3.xlarge` recommended)
 - Ollama + llama3.2 run directly on the host (not in Docker)
 - The Flask app runs in a Docker container on the same instance
-- Container connects to Ollama via `OLLAMA_BASE_URL=http://localhost:11434`
+- Container connects to Ollama via `OLLAMA_BASE_URL=http://host.docker.internal:11434`
 - ChromaDB data and uploads persist on the host via Docker volumes
 - Security group: port 22 (SSH, your IP only) and port 5000 (app)
 - Port 11434 (Ollama) is **not** exposed to the internet
@@ -392,3 +393,4 @@ Both jobs run in parallel; a PR shows both results independently.
 | 10 | Security review | ✅ Complete |
 | 11 | CI/CD (GitHub Actions) | ✅ Complete |
 | 12 | Final documentation | ✅ Complete |
+| 13 | Final release verification | ✅ Complete |
